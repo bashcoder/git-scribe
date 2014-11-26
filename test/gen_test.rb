@@ -11,6 +11,23 @@ context "scribe gen tests" do
     end
   end
 
+  test "scribe don't crash on symlinks when run twice" do
+    in_temp_dir do
+      @scribe.init('t')
+      Dir.chdir('t') do
+        FileUtils.mkdir_p 'book/includes/sub1'
+        FileUtils.mkdir_p 'book/includes/sub2'
+        FileUtils.touch 'book/includes/sub1/real_file'
+        FileUtils.ln_s '../sub1/real_file', 'book/includes/sub2/link_file'
+
+        assert_nothing_raised do
+          @scribe.gen('html')
+          @scribe.gen('html')
+        end
+      end
+    end
+  end
+
   test "scribe can generate single page html" do
     in_temp_dir do
       @scribe.init('t')
@@ -19,7 +36,7 @@ context "scribe gen tests" do
         assert_equal 'book.html', file
         out = Dir.glob('output/**/*')
         assert out.include? 'output/book.html'
-        assert out.include? 'output/image'
+        assert out.include? 'output/images'
         assert out.include? 'output/stylesheets/scribe.css'
       end
     end
@@ -34,7 +51,7 @@ context "scribe gen tests" do
         assert out.include? 'output/index.html'
         assert out.include? 'output/the_first_chapter.html'
         assert out.include? 'output/the_second_chapter.html'
-        assert out.include? 'output/image'
+        assert out.include? 'output/images'
         assert out.include? 'output/stylesheets/scribe.css'
       end
     end
